@@ -82,9 +82,26 @@ const RSA = (() => {
 
   }
 
-  const encrypt = (message, publicKey) => { }
+  const hashFunc = (m, publicKey) => {
+    return (m.length() + publicKey.e) % publicKey.n;
+  }
 
-  const decrypt = (message, privateKey) => { }
+  const encrypt = (m, publicKey) => {
+    // convert message to a numeric value:
+    // en la vida real, la conversión se haría con algún tipo de cifrado de 
+    // caracteres,
+    // por simplicidad, solamente utilizaremos una funcion hash sencilla
+    m = hashFunc(m, publicKey);
+
+    // c: mensaje cifrado
+    const c = Math.pow(m, publicKey.e) % publicKey.n;
+    return c;
+  }
+
+  const decrypt = (c, privateKey) => {
+    const m = Math.pow(c, privateKey.d) % privateKey.n;
+    return m;
+  }
 
   return {
     generateKeys,

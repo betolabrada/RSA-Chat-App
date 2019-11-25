@@ -12,14 +12,36 @@ app.use(express.static(__dirname + '/public'));
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
 
 io.on('connection', socket => {
-  connections.push(socket);
-  console.log('new user connected: %s users in chat', connections.length);
 
-  socket.on('chat message', function(chatMessage){
-    io.emit('chat message', {message: chatMessage, username: users.find(user => user.socketID == socket.id).username});
+  connections.push(socket);
+  if (connections.length == 1) {
+    console.log('waiting for another client: ');
+  }
+  else if (connections.length == 2) {
+    console.log('conversation started!');
+  }
+
+  socket.on('new user', function (data, cb) {
+    cb(true);
+    users.push({
+      username: data.username,
+      socketID: socket.id,
+      publicKey: data.publicKey
+    });
+
+    if (users.length == 2) {
+      sendPublicKeys();
+    }
+    updateUserNames();
+    // sendPublicKeyToSender();
+
   });
 
-  socket.on('disconnect', function(reason){
+  socket.on('chat message', function (chatMessage) {
+    io.emit('chat message', { message: chatMessage, username: users.find(user => user.socketID == socket.id).username });
+  });
+
+  socket.on('disconnect', function (reason) {
     users = users.filter(user => {
       return user.socketID != socket.id;
     });
@@ -29,28 +51,19 @@ io.on('connection', socket => {
 
   });
 
-  socket.on('new user', function(data, cb) {
-    cb(true);
-    if (users.length == 2) {
-      alert("room lleno, espera a que alguien se desconecte");
-    }
-    else {
-      users.push({
-        username: data.username,
-        socketID: socket.id,
-        publicKey: data.publicKey
-      });
-      updateUserNames();
-      // sendPublicKeyToSender();
-    }
-  });
 
   // const sendPublicKeyToSender = () => {
   //   io.emit('send key', users.find(user => user.socketID == socket.id).keys.publicKey)
   // }
 
+
   const updateUserNames = () => {
     io.emit('get users', users);
+  }
+
+  const sendPublicKeys = () => {
+    io.to(users[0].socketID).emit('sent public key', users[1].publicKey);
+    io.to(users[1].socketID).emit('sent public key', users[0].publicKey);
   }
 
 });

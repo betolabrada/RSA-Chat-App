@@ -23,19 +23,7 @@ const newListNode = function (list, content) {
   list.appendChild(element);
 }
 
-// send messages to server
-messageForm.addEventListener('submit', function (e) {
-  e.preventDefault();
-  // event: chat message, send encrypted data to server
-  socket.emit('chat message', chatMessage.value);
-  chatMessage.value = '';
-  return false;
-});
-
-socket.on('chat message', function (msg) {
-  newListNode(messagesList, msg.username + ': ' + msg.message);
-});
-
+// event: new user, sends public key to server
 userForm.addEventListener('submit', function (e) {
   e.preventDefault();
   socket.emit('new user', {
@@ -52,6 +40,30 @@ userForm.addEventListener('submit', function (e) {
   userInput.value = '';
   return false;
 });
+
+// conversation started 
+socket.on('sent public key', function(publicKey) {
+  console.log(`\n
+  My pk n: ${userKeys.publicKey.n}\n
+  My pk e: ${userKeys.publicKey.e}\n
+  Their pk n: ${publicKey.n}\n
+  Their pk e: ${publicKey.e}
+  `);
+});
+
+// send messages to server
+messageForm.addEventListener('submit', function (e) {
+  e.preventDefault();
+  // event: chat message, send encrypted data to server
+  socket.emit('chat message', chatMessage.value);
+  chatMessage.value = '';
+  return false;
+});
+
+socket.on('chat message', function (msg) {
+  newListNode(messagesList, msg.username + ': ' + msg.message);
+});
+
 
 const removeUsersList = () => usersList.innerHTML = '';
 
