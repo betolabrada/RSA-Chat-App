@@ -1,11 +1,13 @@
-const app = require('express')();
+const express = require('express');
+const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
-const port = 8080;
+const port = 3001;
 var users = [];
 var connections = [];
 
 
+app.use(express.static(__dirname + '/public'));
 
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
 
