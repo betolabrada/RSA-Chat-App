@@ -22,7 +22,7 @@ io.on('connection', socket => {
   }
 
   socket.on('new user', function (data, cb) {
-    cb(true);
+    cb(true, data);
     users.push({
       username: data.username,
       socketID: socket.id,

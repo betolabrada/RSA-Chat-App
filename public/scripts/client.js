@@ -3,6 +3,11 @@ const socket = io();
 
 // generate user keys
 const userKeys = RSA.generateKeys();
+var user = {
+  username: null,
+  socketID: null,
+  keys: userKeys
+}
 
 // DOM elements
 const chatArea = document.querySelector('#chatArea');
@@ -23,18 +28,23 @@ const newListNode = function (list, content) {
   list.appendChild(element);
 }
 
-// event: new user, sends public key to server
+// event: new user, saves user client, sends public key to server
 userForm.addEventListener('submit', function (e) {
   e.preventDefault();
   socket.emit('new user', {
-    username: userInput.value,
+    username: userInput.value.charAt(0).toUpperCase() + userInput.value.slice(1),
     publicKey: userKeys.publicKey
-  }, function (data) {
-    if (data) {
+  }, function (hayData, data) {
+    if (hayData, data) {
+      user.username = data.username;
+      user.socketID = data.socketID;
       userFormArea.classList.add('d-none');
       if (chatArea.classList.contains('d-none')) {
         chatArea.classList.remove('d-none');
       }
+      console.log(user);
+      const saludoNombre = document.querySelector('#saludoNombre');
+      saludoNombre.innerHTML = `¡Hola ${user.username}!`;
     }
   });
   userInput.value = '';
@@ -42,7 +52,7 @@ userForm.addEventListener('submit', function (e) {
 });
 
 // conversation started 
-socket.on('sent public key', function(publicKey) {
+socket.on('sent public key', function (publicKey) {
   console.log(`\n
   My pk n: ${userKeys.publicKey.n}\n
   My pk e: ${userKeys.publicKey.e}\n
@@ -61,7 +71,8 @@ messageForm.addEventListener('submit', function (e) {
 });
 
 socket.on('chat message', function (msg) {
-  newListNode(messagesList, msg.username + ': ' + msg.message);
+  const senderName =  msg.username == user.username ? "Tú" : msg.username;
+  newListNode(messagesList, senderName + ': ' + msg.message);
 });
 
 
@@ -75,7 +86,7 @@ socket.on('get users', function (data) {
   headerListNode.appendChild(document.createTextNode("Personas en el chat"));
   usersList.appendChild(headerListNode);
   for (var i = 0; i < data.length; i++) {
-    newListNode(usersList, data[i].username);
+    newListNode(usersList, data[i].username == user.username ? "Tú" : data[i].username);
   }
 });
 
