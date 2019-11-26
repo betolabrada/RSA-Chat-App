@@ -30,15 +30,34 @@ io.on('connection', socket => {
     });
 
     if (users.length == 2) {
-      sendPublicKeys();
+      secureConversation();
     }
     updateUserNames();
     // sendPublicKeyToSender();
+    
+  });
+  
+  const secureConversation = () => {
+    io.to(users[0].socketID).emit('my pair', users[1]);
+    io.to(users[1].socketID).emit('my pair', users[0]);
+  }
 
+  socket.on('encrypted', function(med) {
+    var receiver = users.find(user => user.socketID != socket.id);
+    var sender = users.find(user => user.socketID == socket.id);
+    console.log(`Mensaje encriptado: ${med.encryptedMessage.c} Enviado por: ${sender.username}`);
+    io.to(receiver.socketID).emit('decrypt', {message: med, username: sender.username});
+    
+  });
+
+  socket.on('update med', function(decrypted){
+    io.emit('update med', decrypted);
   });
 
   socket.on('chat message', function (chatMessage) {
-    io.emit('chat message', { message: chatMessage, username: users.find(user => user.socketID == socket.id).username });
+    var senderName = users.find(user => user.socketID == socket.id).username;
+    console.log(`Encrypted message from ${senderName}: ${chatMessage}`);
+    io.emit('chat message', { message: chatMessage, username: senderName});
   });
 
   socket.on('disconnect', function (reason) {
@@ -61,10 +80,6 @@ io.on('connection', socket => {
     io.emit('get users', users);
   }
 
-  const sendPublicKeys = () => {
-    io.to(users[0].socketID).emit('sent public key', users[1].publicKey);
-    io.to(users[1].socketID).emit('sent public key', users[0].publicKey);
-  }
 
 });
 

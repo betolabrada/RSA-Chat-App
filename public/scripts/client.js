@@ -9,6 +9,18 @@ var user = {
   keys: userKeys
 }
 
+var myPair = {
+  username: null,
+  socketID: null,
+  publicKey: null
+}
+
+var med = {
+  cifradoCesar: null,
+  primerCifrado: 0,
+  segundoCifrado: 0
+}
+
 // DOM elements
 const chatArea = document.querySelector('#chatArea');
 const messageForm = document.querySelector('#messageForm');
@@ -42,7 +54,6 @@ userForm.addEventListener('submit', function (e) {
       if (chatArea.classList.contains('d-none')) {
         chatArea.classList.remove('d-none');
       }
-      console.log(user);
       const saludoNombre = document.querySelector('#saludoNombre');
       saludoNombre.innerHTML = `¡Hola ${user.username}!`;
     }
@@ -52,28 +63,73 @@ userForm.addEventListener('submit', function (e) {
 });
 
 // conversation started 
-socket.on('sent public key', function (publicKey) {
-  console.log(`\n
-  My pk n: ${userKeys.publicKey.n}\n
-  My pk e: ${userKeys.publicKey.e}\n
-  Their pk n: ${publicKey.n}\n
-  Their pk e: ${publicKey.e}
-  `);
+socket.on('my pair', function (userPair) {
+
+  myPair.username = userPair.username;
+  myPair.socketID = userPair.socketID;
+  myPair.publicKey = userPair.publicKey;
+
+  console.log(`My public key: {${user.keys.publicKey.n},${user.keys.publicKey.e}}
+  my private key: ${user.keys.privateKey.n},${user.keys.privateKey.d}
+  partner public key: {${myPair.publicKey.n},${myPair.publicKey.e}}`);
+
 });
 
 // send messages to server
 messageForm.addEventListener('submit', function (e) {
   e.preventDefault();
   // event: chat message, send encrypted data to server
-  socket.emit('chat message', chatMessage.value);
+  // dom 
+  newListNode(messagesList, 'Tú: ' + chatMessage.value);
+  // encrypt for server
+  var encryptedMessage = RSA.encrypt(chatMessage.value, myPair.publicKey);
+  med.primerCifrado = encryptedMessage.cifradoNum;
+  med.cifradoCesar = encryptedMessage.cifradoCesar
+  console.log(med);
+  socket.emit('encrypted', {encryptedMessage, med});
   chatMessage.value = '';
+
+
   return false;
 });
 
-socket.on('chat message', function (msg) {
-  const senderName =  msg.username == user.username ? "Tú" : msg.username;
-  newListNode(messagesList, senderName + ': ' + msg.message);
+
+socket.on('decrypt', function (c) {
+  console.log(`My public key before decrypt: {${user.keys.publicKey.n},${user.keys.publicKey.e}}`);
+  med = c.message.med;
+  var dcm = RSA.decrypt(c.message.encryptedMessage.c, user.keys.privateKey);
+  med.segundoCifrado = dcm;
+  console.log(med);
+  if (med.primerCifrado == med.segundoCifrado) {
+    console.log('Crypto successful');
+    newListNode(messagesList, c.username +': ' + RSA.descifrar(med.cifradoCesar));
+  }
+  else {
+    newListNode(messagesList, 'Error');
+  }
+
 });
+
+socket.on('update med', function (decrypted) {
+  med.segundoCifrado = decrypted;
+  if (med.segundoCifrado == med.primerCifrado) {
+    console.log(med.primerCifrado + " = " + med.segundoCifrado);
+    
+  }
+});
+
+
+// socket.on('chat message', function (msg) {
+//   var senderName;
+//   var privateKey;
+//   if (msg.socketID == user.socketID) {
+//     senderName = msg.username == user.username ? "Tú" : msg.username;
+//     privateKey = 
+//   }
+//   msg.message = RSA.decrypt(msg.message, .keys.privateKey);
+
+//   newListNode(messagesList, senderName + ': ' + msg.message);
+// });
 
 
 const removeUsersList = () => usersList.innerHTML = '';
@@ -88,8 +144,4 @@ socket.on('get users', function (data) {
   for (var i = 0; i < data.length; i++) {
     newListNode(usersList, data[i].username == user.username ? "Tú" : data[i].username);
   }
-});
-
-socket.on('send key', function (data) {
-
 });
