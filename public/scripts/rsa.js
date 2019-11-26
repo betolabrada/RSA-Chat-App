@@ -133,28 +133,34 @@ const RSA = (() => {
     }
     console.log('Cifrado cesar: %s', cifradoCesar);
     m = hashFunc(m, publicKey);
-    console.log('Encription: ');
+    console.log('Encryption: ');
     console.log("cifradoNum: " + m);
 
     console.log("Partner public key: {" + publicKey.n + "," + publicKey.e + "}");
 
     // c: mensaje cifrado
-    const c = Math.pow(m, publicKey.e) % publicKey.n;
+    m = BigInt(m);
+    var e = BigInt(publicKey.e);
+    var n = BigInt(publicKey.n);
+    var c = (m**e) % n;
     console.log("c = " + m + "^" + publicKey.e + " % " + publicKey.n + " = " + c);
     return {
       cifradoCesar,
-      cifradoNum: m,
-      c
+      cifradoNum: Number(m),
+      c: Number(c)
     };
   }
 
   const decrypt = (c, privateKey) => {
+    c = BigInt(c);
     console.log(`c before decrypt: ${c}`);
     console.log(`my private key: {${privateKey.n},${privateKey.d}}`);
-    console.log("pow: $d", Math.pow(c, privateKey.d));
-    const m = Math.pow(c, privateKey.d) % privateKey.n;
+    // console.log("pow: $d", Math.pow(c, privateKey.d));
+    var d = BigInt(privateKey.d);
+    var n = BigInt(privateKey.n);
+    const m = (c**d) % n;
     console.log(`m: ${c}^${privateKey.d} % ${privateKey.n} = ${m}`);
-    return m;
+    return Number(m);
   }
 
   return {
