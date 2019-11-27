@@ -55,6 +55,7 @@ userForm.addEventListener('submit', function (e) {
         chatArea.classList.remove('d-none');
       }
       const saludoNombre = document.querySelector('#saludoNombre');
+      saludoNombre.classList.add('text-light');
       saludoNombre.innerHTML = `¡Hola ${user.username}!`;
     }
   });
@@ -62,12 +63,14 @@ userForm.addEventListener('submit', function (e) {
   return false;
 });
 
-// conversation started 
+// conversation started
 socket.on('my pair', function (userPair) {
 
   myPair.username = userPair.username;
   myPair.socketID = userPair.socketID;
   myPair.publicKey = userPair.publicKey;
+
+  setLimit();
 
   console.log(`My public key: {${user.keys.publicKey.n},${user.keys.publicKey.e}}
   my private key: ${user.keys.privateKey.n},${user.keys.privateKey.d}
@@ -79,14 +82,14 @@ socket.on('my pair', function (userPair) {
 messageForm.addEventListener('submit', function (e) {
   e.preventDefault();
   // event: chat message, send encrypted data to server
-  // dom 
+  // dom
   newListNode(messagesList, 'Tú: ' + chatMessage.value);
   // encrypt for server
   var encryptedMessage = RSA.encrypt(chatMessage.value, myPair.publicKey);
   med.primerCifrado = encryptedMessage.cifradoNum;
   med.cifradoCesar = encryptedMessage.cifradoCesar
   console.log(med);
-  socket.emit('encrypted', {encryptedMessage, med});
+  socket.emit('encrypted', { encryptedMessage, med });
   chatMessage.value = '';
 
 
@@ -102,7 +105,7 @@ socket.on('decrypt', function (c) {
   console.log(med);
   if (med.primerCifrado == med.segundoCifrado) {
     console.log('Crypto successful');
-    newListNode(messagesList, c.username +': ' + RSA.descifrar(med.cifradoCesar));
+    newListNode(messagesList, c.username + ': ' + RSA.descifrar(med.cifradoCesar));
   }
   else {
     newListNode(messagesList, 'Error');
@@ -114,23 +117,14 @@ socket.on('update med', function (decrypted) {
   med.segundoCifrado = decrypted;
   if (med.segundoCifrado == med.primerCifrado) {
     console.log(med.primerCifrado + " = " + med.segundoCifrado);
-    
+
   }
 });
 
-
-// socket.on('chat message', function (msg) {
-//   var senderName;
-//   var privateKey;
-//   if (msg.socketID == user.socketID) {
-//     senderName = msg.username == user.username ? "Tú" : msg.username;
-//     privateKey = 
-//   }
-//   msg.message = RSA.decrypt(msg.message, .keys.privateKey);
-
-//   newListNode(messagesList, senderName + ': ' + msg.message);
-// });
-
+socket.on('disconnect', () => {
+  document.querySelector('#not-connected').classList.remove('d-none');
+  userFormArea.classList.add('d-none');
+});
 
 const removeUsersList = () => usersList.innerHTML = '';
 
@@ -139,9 +133,19 @@ socket.on('get users', function (data) {
   removeUsersList();
   const headerListNode = document.createElement('li');
   headerListNode.classList.add("list-group-item", "list-group-item-dark");
+  headerListNode.style.backgroundColor = '#27ae60';
+  headerListNode.style.borderColor = '#27ae60';
+  headerListNode.style.color = '#fff';
   headerListNode.appendChild(document.createTextNode("Personas en el chat"));
   usersList.appendChild(headerListNode);
   for (var i = 0; i < data.length; i++) {
     newListNode(usersList, data[i].username == user.username ? "Tú" : data[i].username);
   }
 });
+
+function setLimit() {
+  const limit = user.keys.publicKey.n < myPair.publicKey.n ? user.keys.publicKey.n : myPair.publicKey.n
+  chatMessage.setAttribute('placeholder', 'Mensaje... (limite: ' + limit + ' caracteres)');
+  chatMessage.setAttribute('aria-label', 'Mensaje... (limite: ' + limit + ' caracteres)');
+  chatMessage.setAttribute('maxlength', limit);
+}

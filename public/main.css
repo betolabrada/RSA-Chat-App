@@ -1,0 +1,30 @@
+html {
+  height: 100%;
+}
+body {
+  height: 100%;
+  margin: 0;
+  background: no-repeat linear-gradient(#1f4037, #99f2c8);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+#cartaLogin{
+  height: 50%;
+}
+
+#btnIniciar {
+  background-color: #27ae60;
+  border-color: #27ae60;
+  color: #fff;
+}
+
+#messages-list {
+  height: 100%;
+  overflow: scroll;
+}
+
+#userInput {
+  border-top-right-radius: .25rem;
+  border-bottom-right-radius: .25rem;
+}
