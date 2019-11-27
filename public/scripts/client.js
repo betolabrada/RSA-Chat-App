@@ -73,7 +73,7 @@ socket.on('my pair', function (userPair) {
   setLimit();
 
   console.log(`My public key: {${user.keys.publicKey.n},${user.keys.publicKey.e}}
-  my private key: ${user.keys.privateKey.n},${user.keys.privateKey.d}
+  my private key: {${user.keys.privateKey.n},${user.keys.privateKey.d}}
   partner public key: {${myPair.publicKey.n},${myPair.publicKey.e}}`);
 
 });
@@ -98,7 +98,6 @@ messageForm.addEventListener('submit', function (e) {
 
 
 socket.on('decrypt', function (c) {
-  console.log(`My public key before decrypt: {${user.keys.publicKey.n},${user.keys.publicKey.e}}`);
   med = c.message.med;
   var dcm = RSA.decrypt(c.message.encryptedMessage.c, user.keys.privateKey);
   med.segundoCifrado = dcm;
@@ -129,7 +128,6 @@ socket.on('disconnect', () => {
 const removeUsersList = () => usersList.innerHTML = '';
 
 socket.on('get users', function (data) {
-  console.log(data);
   removeUsersList();
   const headerListNode = document.createElement('li');
   headerListNode.classList.add("list-group-item", "list-group-item-dark");

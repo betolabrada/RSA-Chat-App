@@ -42,7 +42,7 @@ const RSA = (() => {
     return primeArray;
   }
   const primeGen = () => {
-    const primes = primeArray(2, 30);
+    const primes = primeArray(2, 50);
     do {
       var pdx = Math.floor(Math.random() * primes.length);
       var qdx = Math.floor(Math.random() * primes.length);
@@ -153,7 +153,7 @@ const RSA = (() => {
 
   const decrypt = (c, privateKey) => {
     c = BigInt(c);
-    console.log(`c before decrypt: ${c}`);
+    console.log('Decryption: ');
     console.log(`my private key: {${privateKey.n},${privateKey.d}}`);
     // console.log("pow: $d", Math.pow(c, privateKey.d));
     var d = BigInt(privateKey.d);
